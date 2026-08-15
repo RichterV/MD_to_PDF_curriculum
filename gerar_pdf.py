@@ -38,6 +38,11 @@ Uso:
     python gerar_pdf.py
     python gerar_pdf.py curriculo_base_PT.md curriculo_base_EN.md
     python gerar_pdf.py meu_curriculo.md --out-dir dist --max-pages 1
+    python gerar_pdf.py --config outro_config.yml
+
+Margens, escalas de auto-encaixe, cores e tamanhos de fonte vem de
+"config.yml" (ao lado deste script, por padrao) e podem ser sobrescritos
+sem editar o codigo. Ver config.yml para a lista completa de opcoes.
 
 Requisitos:
     pip install -r requirements.txt
@@ -49,9 +54,11 @@ import argparse
 import io
 import re
 import sys
+from copy import deepcopy
 from dataclasses import dataclass
 from pathlib import Path
 
+import yaml
 from reportlab.lib import colors
 from reportlab.lib.enums import TA_CENTER, TA_LEFT
 from reportlab.lib.pagesizes import A4, LETTER
@@ -67,6 +74,71 @@ from reportlab.platypus import (
     Paragraph,
     Spacer,
 )
+
+# --------------------------------------------------------------------------
+# 0. Configuracao (config.yml, com fallback embutido)
+# --------------------------------------------------------------------------
+
+DEFAULT_CONFIG = {
+    "max_pages": 2,
+    "out_dir": None,
+    "margins_cm": {"left": 2.0, "right": 2.0, "top": 1.7, "bottom": 1.7},
+    "scale_steps": [1.0, 0.94, 0.88, 0.82, 0.76, 0.7, 0.64, 0.58, 0.52],
+    "languages": {
+        "pt": {"page_size": "A4", "page_label": "Pagina"},
+        "en": {"page_size": "LETTER", "page_label": "Page"},
+        "default": {"page_size": "A4", "page_label": "Pagina"},
+    },
+    "colors": {
+        "rule": "#999999",
+        "page_number": "#8a8a8a",
+        "link": "#1a4d7a",
+    },
+    "styles": {
+        "name": {"font_size": 23, "font_size_min": 17, "color": "#111111"},
+        "subtitle": {"font_size": 12.5, "font_size_min": 10.5, "color": "#3d3d3d"},
+        "contact": {"font_size": 9.3, "font_size_min": 8.3, "color": "#202020"},
+        "h2": {"font_size": 11.5, "font_size_min": 10, "color": "#12324f"},
+        "h3": {"font_size": 10.3, "font_size_min": 9.2, "color": "#111111"},
+        "dateline": {"font_size": 9.3, "font_size_min": 8.3, "color": "#525252"},
+        "body": {"font_size": 9.6, "font_size_min": 8.6, "color": "#1a1a1a"},
+    },
+}
+
+DEFAULT_CONFIG_PATH = Path(__file__).resolve().parent / "config.yml"
+
+PAGE_SIZES = {"A4": A4, "LETTER": LETTER}
+
+
+def deep_merge(base: dict, override: dict) -> dict:
+    """Mescla `override` sobre `base`, recursivamente para chaves que sao
+    dicts nos dois lados. Permite que o config.yml do usuario sobrescreva
+    so as chaves que quiser, mantendo o resto do padrao embutido.
+    """
+    merged = dict(base)
+    for key, value in override.items():
+        if isinstance(value, dict) and isinstance(merged.get(key), dict):
+            merged[key] = deep_merge(merged[key], value)
+        else:
+            merged[key] = value
+    return merged
+
+
+def load_config(config_path: Path | None) -> dict:
+    path = config_path or DEFAULT_CONFIG_PATH
+    config = deepcopy(DEFAULT_CONFIG)
+    if not path.exists():
+        return config
+    with path.open(encoding="utf-8") as f:
+        user_config = yaml.safe_load(f) or {}
+    return deep_merge(config, user_config)
+
+
+# Populado por load_config() em main(); os valores padrao aqui garantem que
+# as funcoes abaixo continuem funcionando mesmo se chamadas sem passar por
+# main() (ex: em um script/teste que importa este modulo).
+CFG = deepcopy(DEFAULT_CONFIG)
+
 
 # --------------------------------------------------------------------------
 # 1. Parsing do Markdown em blocos estruturados
@@ -143,8 +215,9 @@ def escape_xml(text: str) -> str:
 
 def md_inline(text: str) -> str:
     text = escape_xml(text)
+    link_color = CFG["colors"]["link"]
     text = LINK_RE.sub(
-        lambda m: f'<link href="{m.group(2)}" color="#1a4d7a"><u>{m.group(1)}</u></link>',
+        lambda m: f'<link href="{m.group(2)}" color="{link_color}"><u>{m.group(1)}</u></link>',
         text,
     )
     text = BOLD_RE.sub(lambda m: f"<b>{m.group(1)}</b>", text)
@@ -157,54 +230,56 @@ def md_inline(text: str) -> str:
 # --------------------------------------------------------------------------
 
 def build_styles(scale: float) -> dict:
+    s = CFG["styles"]
+
     def px(base: float, minimum: float) -> float:
         return max(round(base * scale, 2), minimum)
 
-    name_size = px(23, 17)
-    subtitle_size = px(12.5, 10.5)
-    contact_size = px(9.3, 8.3)
-    h2_size = px(11.5, 10)
-    h3_size = px(10.3, 9.2)
-    dateline_size = px(9.3, 8.3)
-    body_size = px(9.6, 8.6)
+    name_size = px(s["name"]["font_size"], s["name"]["font_size_min"])
+    subtitle_size = px(s["subtitle"]["font_size"], s["subtitle"]["font_size_min"])
+    contact_size = px(s["contact"]["font_size"], s["contact"]["font_size_min"])
+    h2_size = px(s["h2"]["font_size"], s["h2"]["font_size_min"])
+    h3_size = px(s["h3"]["font_size"], s["h3"]["font_size_min"])
+    dateline_size = px(s["dateline"]["font_size"], s["dateline"]["font_size_min"])
+    body_size = px(s["body"]["font_size"], s["body"]["font_size_min"])
 
     styles: dict = {}
 
     styles["name"] = ParagraphStyle(
         "Name", fontName="Helvetica-Bold", fontSize=name_size,
         leading=name_size * 1.15, alignment=TA_CENTER,
-        textColor=colors.HexColor("#111111"), spaceAfter=px(2, 1),
+        textColor=colors.HexColor(s["name"]["color"]), spaceAfter=px(2, 1),
     )
     styles["subtitle"] = ParagraphStyle(
         "Subtitle", fontName="Helvetica", fontSize=subtitle_size,
         leading=subtitle_size * 1.3, alignment=TA_CENTER,
-        textColor=colors.HexColor("#3d3d3d"), spaceAfter=px(7, 4),
+        textColor=colors.HexColor(s["subtitle"]["color"]), spaceAfter=px(7, 4),
     )
     styles["contact"] = ParagraphStyle(
         "Contact", fontName="Helvetica", fontSize=contact_size,
         leading=contact_size * 1.35, alignment=TA_CENTER,
-        textColor=colors.HexColor("#202020"),
+        textColor=colors.HexColor(s["contact"]["color"]),
     )
     styles["h2"] = ParagraphStyle(
         "H2", fontName="Helvetica-Bold", fontSize=h2_size,
         leading=h2_size * 1.2, alignment=TA_LEFT,
-        textColor=colors.HexColor("#12324f"), spaceBefore=0, spaceAfter=0,
+        textColor=colors.HexColor(s["h2"]["color"]), spaceBefore=0, spaceAfter=0,
     )
     styles["h3"] = ParagraphStyle(
         "H3", fontName="Helvetica-Bold", fontSize=h3_size,
         leading=h3_size * 1.25, alignment=TA_LEFT,
-        textColor=colors.HexColor("#111111"),
+        textColor=colors.HexColor(s["h3"]["color"]),
         spaceBefore=px(7, 3), spaceAfter=0,
     )
     styles["dateline"] = ParagraphStyle(
         "Dateline", fontName="Helvetica-Oblique", fontSize=dateline_size,
         leading=dateline_size * 1.25, alignment=TA_LEFT,
-        textColor=colors.HexColor("#525252"), spaceBefore=0, spaceAfter=px(3, 2),
+        textColor=colors.HexColor(s["dateline"]["color"]), spaceBefore=0, spaceAfter=px(3, 2),
     )
     styles["body"] = ParagraphStyle(
         "Body", fontName="Helvetica", fontSize=body_size,
         leading=body_size * 1.32, alignment=TA_LEFT,
-        textColor=colors.HexColor("#1a1a1a"),
+        textColor=colors.HexColor(s["body"]["color"]),
         spaceBefore=px(2, 1), spaceAfter=px(3, 2),
     )
     styles["bullet"] = ParagraphStyle(
@@ -216,6 +291,7 @@ def build_styles(scale: float) -> dict:
     styles["h2_rule_space_after"] = px(5, 3)
     styles["section_space_after"] = px(6, 3)
     styles["contact_space_after"] = px(8, 5)
+    styles["rule_color"] = colors.HexColor(CFG["colors"]["rule"])
 
     return styles
 
@@ -313,7 +389,7 @@ def build_flowables(blocks: list[Block], styles: dict) -> list:
         flow.append(Paragraph(md_inline(heading_text).upper(), styles["h2"]))
         flow.append(
             HRFlowable(
-                width="100%", thickness=0.75, color=colors.HexColor("#999999"),
+                width="100%", thickness=0.75, color=styles["rule_color"],
                 spaceBefore=1, spaceAfter=styles["h2_rule_space_after"],
             )
         )
@@ -344,7 +420,7 @@ def render_to_buffer(flowables: list, page_size, margins: dict, metadata: dict, 
     def on_page(c, _doc):
         c.saveState()
         c.setFont("Helvetica", 7.5)
-        c.setFillColor(colors.HexColor("#8a8a8a"))
+        c.setFillColor(colors.HexColor(CFG["colors"]["page_number"]))
         c.drawCentredString(page_size[0] / 2, bottom * 0.45, f"{page_label} {c.getPageNumber()}")
         c.restoreState()
 
@@ -364,15 +440,6 @@ def render_to_buffer(flowables: list, page_size, margins: dict, metadata: dict, 
     return buf, page_count["n"]
 
 
-# Fatores de escala testados em ordem, do layout "normal" ate o mais
-# compacto, ate o conteudo caber no limite de paginas configurado.
-# Os tamanhos de fonte tem piso minimo (ver build_styles) e param de encolher
-# bem antes do fim desta lista; as escalas mais baixas continuam reduzindo
-# apenas o espacamento vertical, o que permite encaixar mais conteudo sem
-# tornar o texto ilegivel.
-SCALE_STEPS = (1.0, 0.94, 0.88, 0.82, 0.76, 0.7, 0.64, 0.58, 0.52)
-
-
 def render_pdf(md_path: Path, out_path: Path, max_pages: int, page_size, page_label: str) -> int:
     text = md_path.read_text(encoding="utf-8")
     blocks = parse_markdown(text)
@@ -387,10 +454,14 @@ def render_pdf(md_path: Path, out_path: Path, max_pages: int, page_size, page_la
         "subject": subtitle or "Curriculum Vitae",
         "keywords": keywords[:2000],
     }
-    margins = {"left": 2.0 * cm, "right": 2.0 * cm, "top": 1.7 * cm, "bottom": 1.7 * cm}
+    m = CFG["margins_cm"]
+    margins = {
+        "left": m["left"] * cm, "right": m["right"] * cm,
+        "top": m["top"] * cm, "bottom": m["bottom"] * cm,
+    }
 
     best = None
-    for scale in SCALE_STEPS:
+    for scale in CFG["scale_steps"]:
         styles = build_styles(scale)
         flowables = build_flowables(blocks, styles)
         buf, pages = render_to_buffer(flowables, page_size, margins, metadata, page_label)
@@ -422,14 +493,18 @@ BASE_STEM_RE = re.compile(r"^curriculo_base", re.IGNORECASE)
 
 
 def resolve_output_language(stem: str):
-    """Detecta o idioma pelo token '_pt'/'_en' em qualquer posicao do nome,
-    nao so no final — assim 'curriculo_base_PT_adapted' ainda e reconhecido
-    como PT (ver instructions.md / secao "_adapted" no README).
+    """Detecta o idioma pelo token de "languages" em config.yml (ex: 'pt',
+    'en') em qualquer posicao do nome separada por '_'/'-', nao so no final:
+    assim 'curriculo_base_PT_adapted' ainda e reconhecido como PT. Cai em
+    "languages.default" quando nenhum token bate.
     """
     tokens = re.split(r"[_\-]", stem.lower())
-    if "en" in tokens:
-        return LETTER, "Page"
-    return A4, "Pagina"
+    languages = CFG["languages"]
+    for token, lang_cfg in languages.items():
+        if token != "default" and token in tokens:
+            return PAGE_SIZES[lang_cfg["page_size"]], lang_cfg["page_label"]
+    default_cfg = languages.get("default", DEFAULT_CONFIG["languages"]["default"])
+    return PAGE_SIZES[default_cfg["page_size"]], default_cfg["page_label"]
 
 
 def default_output_name(stem: str) -> str:
@@ -452,18 +527,30 @@ def main(argv=None) -> int:
             "  python gerar_pdf.py\n"
             "  python gerar_pdf.py curriculo_base_PT.md curriculo_base_EN.md\n"
             "  python gerar_pdf.py meu_curriculo.md --out-dir dist --max-pages 1\n"
+            "  python gerar_pdf.py --config outro_config.yml\n"
         ),
     )
     parser.add_argument("arquivos", nargs="*", help="Arquivo(s) Markdown de entrada")
     parser.add_argument(
         "--out-dir", type=Path, default=None,
-        help="Diretorio de saida (padrao: mesmo diretorio do .md)",
+        help="Diretorio de saida (padrao: 'out_dir' em config.yml, ou o "
+             "mesmo diretorio do .md se 'out_dir' nao estiver definido)",
     )
     parser.add_argument(
-        "--max-pages", type=int, default=2,
-        help="Numero maximo de paginas antes de reduzir o espacamento (padrao: 2)",
+        "--max-pages", type=int, default=None,
+        help="Numero maximo de paginas antes de reduzir o espacamento "
+             "(padrao: valor de 'max_pages' em config.yml, normalmente 2)",
+    )
+    parser.add_argument(
+        "--config", type=Path, default=None,
+        help="Caminho para um config.yml alternativo (padrao: config.yml "
+             "ao lado deste script)",
     )
     args = parser.parse_args(argv)
+
+    global CFG
+    CFG = load_config(args.config)
+    max_pages = args.max_pages if args.max_pages is not None else CFG["max_pages"]
 
     inputs = [Path(p) for p in args.arquivos]
     if not inputs:
@@ -484,11 +571,12 @@ def main(argv=None) -> int:
             continue
 
         page_size, page_label = resolve_output_language(md_path.stem)
-        out_dir = args.out_dir or md_path.parent
+        config_out_dir = Path(CFG["out_dir"]) if CFG["out_dir"] else None
+        out_dir = args.out_dir or config_out_dir or md_path.parent
         out_dir.mkdir(parents=True, exist_ok=True)
         out_path = out_dir / default_output_name(md_path.stem)
 
-        render_pdf(md_path, out_path, args.max_pages, page_size, page_label)
+        render_pdf(md_path, out_path, max_pages, page_size, page_label)
 
     return exit_code
 

@@ -1,1 +1,2 @@
 reportlab>=4.0
+PyYAML>=6.0

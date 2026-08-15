@@ -11,7 +11,8 @@ curriculo_base_PT.md   # conteúdo do currículo em português (fonte)
 curriculo_base_EN.md   # conteúdo do currículo em inglês (fonte)
 instructions.md        # regras para um agente de IA criar ou adaptar o currículo
 gerar_pdf.py           # script que converte os .md acima em PDF
-requirements.txt       # dependências Python (reportlab)
+config.yml             # configurações visuais do PDF (opcional mexer, ver abaixo)
+requirements.txt       # dependências Python (reportlab, PyYAML)
 Curriculo_PT.pdf       # gerado pelo script (A4)
 Curriculo_EN.pdf       # gerado pelo script (Letter)
 ```
@@ -145,6 +146,28 @@ python gerar_pdf.py curriculo_base_PT_adapted.md curriculo_base_EN_adapted.md
 - Metadados do PDF (título, autor, assunto, palavras-chave) preenchidos
   automaticamente a partir do conteúdo.
 - Auto-encaixe de layout: o script tenta várias escalas de espaçamento/fonte
-  até o conteúdo caber no limite de páginas configurado (`--max-pages`,
-  padrão 2), sem exigir ajuste manual quando novas experiências/habilidades
-  são adicionadas.
+  até o conteúdo caber no limite de páginas configurado (`--max-pages` ou
+  `max_pages` em `config.yml`, padrão 2), sem exigir ajuste manual quando
+  novas experiências/habilidades são adicionadas.
+
+## Configurações visuais (config.yml)
+
+**Você não precisa mudar nada em `config.yml`.** Ele já vem com valores
+padrão prontos para uso: basta editar `curriculo_base_PT.md` /
+`curriculo_base_EN.md` e rodar `python gerar_pdf.py` normalmente, sem tocar
+nesse arquivo.
+
+Ele só existe para quem *quiser* alterar a aparência dos PDFs gerados sem
+mexer em `gerar_pdf.py`: margens, tamanhos de fonte (e seus limites mínimos
+de encolhimento), cores, escalas de auto-encaixe, o tamanho de página/rótulo
+de rodapé por idioma, e o diretório onde os PDFs são salvos (`out_dir`, por
+padrão a raiz do projeto, junto do `.md` de origem). Se `config.yml` for
+removido ou renomeado, o script volta a usar os mesmos valores como padrão
+embutido.
+
+Para usar um arquivo de configuração diferente do padrão (por exemplo, para
+manter mais de um estilo visual):
+
+```
+python gerar_pdf.py --config outro_config.yml
+```

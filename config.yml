@@ -1,0 +1,97 @@
+# ============================================================================
+# VOCE NAO PRECISA MUDAR NADA NESTE ARQUIVO.
+# So mexa aqui se quiser alterar configuracoes visuais dos PDFs gerados
+# (margens, tamanho de fonte, cores, paginas). Para so gerar seu curriculo,
+# basta editar curriculo_base_PT.md / curriculo_base_EN.md e rodar
+# "python gerar_pdf.py" normalmente, este arquivo ja vem com valores padrao
+# prontos para uso.
+# ============================================================================
+#
+# Este arquivo contem os valores padrao usados para gerar os PDFs. Edite
+# qualquer valor abaixo para mudar o layout permanentemente, sem precisar
+# alterar o codigo do script. Se este arquivo for removido ou renomeado, o
+# script volta a usar os mesmos valores como padrao embutido.
+#
+# Use "--config <caminho>" para apontar para um arquivo de configuracao
+# diferente deste (ex: um config.yml alternativo por estilo de curriculo).
+
+# Numero maximo de paginas antes do script parar de encolher o layout.
+# Pode ser sobrescrito pela flag --max-pages.
+max_pages: 2
+
+# Diretorio onde os PDFs gerados sao salvos. "null" (padrao) salva cada PDF
+# ao lado do .md que deu origem a ele, ou seja, na raiz do projeto para
+# curriculo_base_PT.md / curriculo_base_EN.md. Para salvar em outro lugar,
+# troque para um caminho, ex: "dist" ou "C:/saida". Pode ser sobrescrito
+# pela flag --out-dir.
+out_dir: null
+
+# Margens da pagina, em centimetros.
+margins_cm:
+  left: 2.0
+  right: 2.0
+  top: 1.7
+  bottom: 1.7
+
+# Fatores de escala testados em ordem, do layout "normal" (1.0) ate o mais
+# compacto, ate o conteudo caber no limite de paginas configurado. Os
+# tamanhos de fonte tem piso minimo (ver "styles" abaixo) e param de encolher
+# bem antes do fim desta lista; escalas mais baixas continuam reduzindo
+# apenas o espacamento vertical.
+scale_steps: [1.0, 0.94, 0.88, 0.82, 0.76, 0.70, 0.64, 0.58, 0.52]
+
+# Tamanho de pagina e rotulo de rodape por idioma. O idioma e detectado pelo
+# token no nome do arquivo, separado por "_" ou "-" (ex: "curriculo_base_PT"
+# bate com o token "pt", em qualquer posicao do nome). Pode adicionar outros
+# idiomas aqui (ex: "es"), usando "A4" ou "LETTER" como page_size. A entrada
+# "default" e usada quando nenhum token bate.
+languages:
+  pt:
+    page_size: A4
+    page_label: "Pagina"
+  en:
+    page_size: LETTER
+    page_label: "Page"
+  default:
+    page_size: A4
+    page_label: "Pagina"
+
+# Cores usadas fora dos estilos de texto principais (formato hexadecimal).
+colors:
+  rule: "#999999"        # linha divisoria abaixo de cada titulo de secao
+  page_number: "#8a8a8a" # numero de pagina no rodape
+  link: "#1a4d7a"        # links inline, ex: [texto](url)
+
+# Tamanho de fonte (font_size), piso minimo de encolhimento (font_size_min) e
+# cor (formato hexadecimal) de cada elemento do curriculo. font_size_min
+# evita que o auto-encaixe deixe o texto ilegivel: a fonte para de encolher
+# nesse valor e o script passa a reduzir so o espacamento vertical.
+styles:
+  name:
+    font_size: 23
+    font_size_min: 17
+    color: "#111111"
+  subtitle:
+    font_size: 12.5
+    font_size_min: 10.5
+    color: "#3d3d3d"
+  contact:
+    font_size: 9.3
+    font_size_min: 8.3
+    color: "#202020"
+  h2:
+    font_size: 11.5
+    font_size_min: 10
+    color: "#12324f"
+  h3:
+    font_size: 10.3
+    font_size_min: 9.2
+    color: "#111111"
+  dateline:
+    font_size: 9.3
+    font_size_min: 8.3
+    color: "#525252"
+  body:
+    font_size: 9.6
+    font_size_min: 8.6
+    color: "#1a1a1a"
