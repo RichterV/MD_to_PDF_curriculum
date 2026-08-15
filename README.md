@@ -1,8 +1,16 @@
 # Currículo: Markdown para PDF (otimizado para ATS/IA)
 
-Projeto para manter o currículo em Markdown como fonte única da verdade e
-gerar automaticamente PDFs otimizados para leitura por ATS (Applicant
-Tracking System) e por triagem automatizada via IA.
+Aqui o conteúdo do seu currículo fica guardado em um arquivo de texto simples
+(Markdown), e o PDF final é sempre gerado automaticamente a partir dele.
+Você edita só esse arquivo de texto; nunca precisa abrir o PDF para
+ajustar espaçamento, fonte ou alinhamento na mão.
+
+O PDF gerado também é pensado para ser bem lido por máquina: hoje boa parte
+das candidaturas passa primeiro por um ATS (o sistema que faz a triagem
+automática de currículos antes de um humano ver) ou por uma IA fazendo essa
+primeira leitura. Currículos com tabelas, colunas, ícones ou caixas de texto
+costumam confundir essas ferramentas e perder informação. Este projeto evita
+tudo isso por padrão, sem que você precise se preocupar com formatação.
 
 ## Estrutura do projeto
 
