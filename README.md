@@ -130,14 +130,6 @@ python gerar_pdf.py curriculo_base_PT_adapted.md curriculo_base_EN_adapted.md
 Basta adicionar mais bullets, mais itens `###` ou seções `##` inteiras, o
 script se adapta automaticamente, sem precisar editar `gerar_pdf.py`.
 
-## Nome do arquivo de entrada
-
-O script identifica o idioma pelo sufixo do nome do arquivo:
-
-- `..._PT.md` → página A4, rótulo de página "Pagina X".
-- `..._EN.md` → página Letter, rótulo de página "Page X".
-- Qualquer outro nome → padrão A4/"Pagina X".
-
 ## Por que é ATS/IA-friendly
 
 - Coluna única, sem tabelas, caixas de texto ou imagens de texto.
