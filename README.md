@@ -41,32 +41,6 @@ Curriculo_EN.pdf       # gerado pelo script (Letter)
    python gerar_pdf.py meu_curriculo.md --out-dir dist --max-pages 1
    ```
 
-## Convenções do Markdown
-
-- `# Nome`, primeira linha do arquivo, único H1.
-- Linha solta logo abaixo do nome, vira o subtítulo (ex: cargo desejado).
-- **A primeira seção `##` do arquivo é sempre tratada como bloco de
-  contato**: deve conter só itens de lista (`- Label: valor`) e é renderizada
-  em uma linha só, sem repetir o título da seção.
-- Demais seções `##` (Experiência, Formação, Habilidades, Idiomas, Carta de
-  Apresentação, etc.) viram seções normais do PDF.
-- Dentro de uma seção, `### Cargo/Curso` seguido da linha `**Empresa** |
-  Período` forma um item de experiência/formação. Bullets (`-`) abaixo viram
-  a lista de responsabilidades.
-- Seções sem `###` (como Habilidades/Idiomas) podem ser só uma lista de
-  bullets direto abaixo do `##`.
-
-Basta adicionar mais bullets, mais itens `###` ou seções `##` inteiras, o
-script se adapta automaticamente, sem precisar editar `gerar_pdf.py`.
-
-## Nome do arquivo de entrada
-
-O script identifica o idioma pelo sufixo do nome do arquivo:
-
-- `..._PT.md` → página A4, rótulo de página "Pagina X".
-- `..._EN.md` → página Letter, rótulo de página "Page X".
-- Qualquer outro nome → padrão A4/"Pagina X".
-
 ## Como criar seu currículo do zero
 
 Se você ainda não tem `curriculo_base_PT.md` / `curriculo_base_EN.md`
@@ -137,6 +111,32 @@ da mesma forma que qualquer outro arquivo de entrada:
 ```
 python gerar_pdf.py curriculo_base_PT_adapted.md curriculo_base_EN_adapted.md
 ```
+
+## Convenções do Markdown
+
+- `# Nome`, primeira linha do arquivo, único H1.
+- Linha solta logo abaixo do nome, vira o subtítulo (ex: cargo desejado).
+- **A primeira seção `##` do arquivo é sempre tratada como bloco de
+  contato**: deve conter só itens de lista (`- Label: valor`) e é renderizada
+  em uma linha só, sem repetir o título da seção.
+- Demais seções `##` (Experiência, Formação, Habilidades, Idiomas, Carta de
+  Apresentação, etc.) viram seções normais do PDF.
+- Dentro de uma seção, `### Cargo/Curso` seguido da linha `**Empresa** |
+  Período` forma um item de experiência/formação. Bullets (`-`) abaixo viram
+  a lista de responsabilidades.
+- Seções sem `###` (como Habilidades/Idiomas) podem ser só uma lista de
+  bullets direto abaixo do `##`.
+
+Basta adicionar mais bullets, mais itens `###` ou seções `##` inteiras, o
+script se adapta automaticamente, sem precisar editar `gerar_pdf.py`.
+
+## Nome do arquivo de entrada
+
+O script identifica o idioma pelo sufixo do nome do arquivo:
+
+- `..._PT.md` → página A4, rótulo de página "Pagina X".
+- `..._EN.md` → página Letter, rótulo de página "Page X".
+- Qualquer outro nome → padrão A4/"Pagina X".
 
 ## Por que é ATS/IA-friendly
 
