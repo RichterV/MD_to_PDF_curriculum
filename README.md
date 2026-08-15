@@ -110,5 +110,3 @@ python gerar_pdf.py curriculo_base_PT_adapted.md curriculo_base_EN_adapted.md
   até o conteúdo caber no limite de páginas configurado (`--max-pages`,
   padrão 2), sem exigir ajuste manual quando novas experiências/habilidades
   são adicionadas.
-
-Mais detalhes de implementação em [CLAUDE.md](CLAUDE.md).
