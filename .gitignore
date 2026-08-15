@@ -1,0 +1,18 @@
+# Ambientes virtuais Python
+venv/
+.venv/
+env/
+ENV/
+
+# Cache Python
+__pycache__/
+*.pyc
+
+# Arquivos de teste/rascunho
+scratch_*
+
+# Claude
+CLAUDE.md
+
+# Dados pessoais reais (currículo verdadeiro, PDFs gerados com dados reais)
+Meus dados/
