@@ -27,17 +27,44 @@ Curriculo_EN.pdf       # gerado pelo script (Letter)
 
 ## Como usar
 
-1. Instale as dependências (uma vez, idealmente em um venv):
+Os comandos abaixo são digitados em um terminal do Windows: **Prompt de
+Comando (cmd)** ou **PowerShell**. Para abrir um deles na pasta do projeto,
+abra a pasta no Explorador de Arquivos, clique com o botão direito em um
+espaço vazio e escolha "Abrir no Terminal" (Windows 11) ou "Abrir janela do
+PowerShell aqui" (Windows 10). Os comandos de ativação do ambiente virtual
+mudam um pouco entre cmd e PowerShell, então cada bloco abaixo indica em
+qual dos dois ele deve ser digitado.
+
+1. Instale as dependências (uma vez, idealmente em um ambiente virtual):
+
+   **No PowerShell:**
    ```
    python -m venv venv
-   venv\Scripts\activate
+   venv\Scripts\Activate.ps1
+   pip install -r requirements.txt
+   ```
+   Se aparecer um erro dizendo que a execução de scripts está desabilitada,
+   rode este comando uma vez nessa mesma janela e tente `Activate.ps1`
+   novamente:
+   ```
+   Set-ExecutionPolicy -Scope Process -ExecutionPolicy Bypass
+   ```
+
+   **No Prompt de Comando (cmd):**
+   ```
+   python -m venv venv
+   venv\Scripts\activate.bat
    pip install -r requirements.txt
    ```
 
-2. Edite `curriculo_base_PT.md` e/ou `curriculo_base_EN.md` com o conteúdo do
-   currículo (ver convenções abaixo).
+   Em ambos os casos, o nome do ambiente virtual (`venv`) passa a aparecer
+   entre parênteses no início da linha do terminal quando a ativação
+   funcionar.
 
-3. Gere os PDFs:
+2. Edite `curriculo_base_PT.md` e/ou `curriculo_base_EN.md` com o conteúdo do
+   currículo.
+
+3. Gere os PDFs (mesmo comando em cmd ou PowerShell):
    ```
    python gerar_pdf.py
    ```
